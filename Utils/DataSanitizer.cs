@@ -230,7 +230,14 @@ namespace File2CSVTransformer.Utils
         public static string EscapeForCsv(string field, char delimiter)
         {
             if (string.IsNullOrEmpty(field))
-                return string.Empty;
+                return "NULL"; // Return NULL instead of empty string
+
+            // Trim whitespace from the field
+            field = field.Trim();
+            
+            // If after trimming the field is empty, return NULL
+            if (string.IsNullOrEmpty(field))
+                return "NULL";
 
             bool needsQuoting = field.Contains(delimiter.ToString()) || 
                                 field.Contains("\"") || 
