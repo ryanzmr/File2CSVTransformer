@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using File2CSVTransformer.Models;
 
 namespace File2CSVTransformer.Services
 {
@@ -10,11 +11,13 @@ namespace File2CSVTransformer.Services
     {
         private readonly string _inputDirectory;
         private readonly Logger _logger;
+        private readonly List<string> _supportedExtensions;
 
-        public FileScanner(string inputDirectory, Logger logger)
+        public FileScanner(string inputDirectory, Logger logger, List<string> supportedExtensions)
         {
             _inputDirectory = inputDirectory;
             _logger = logger;
+            _supportedExtensions = supportedExtensions ?? new List<string> { ".txt" };
         }
 
         public async Task<List<string>> ScanForFilesAsync()
@@ -26,21 +29,44 @@ namespace File2CSVTransformer.Services
                     throw new DirectoryNotFoundException($"Input directory not found: {_inputDirectory}");
                 }
 
-                // Get all text files in the input directory
-                var files = Directory.GetFiles(_inputDirectory, "*.txt")
-                                    .OrderBy(f => new FileInfo(f).CreationTime)
-                                    .ToList();
-
-                if (files.Count == 0)
+                var allFiles = new List<string>();
+                
+                // Get all files with supported extensions
+                foreach (var extension in _supportedExtensions)
                 {
-                    Console.WriteLine($"No .txt files found in {_inputDirectory}");
+                    // Ensure extension starts with a dot
+                    string searchPattern = extension.StartsWith(".") ? $"*{extension}" : $"*.{extension}";
+                    
+                    var files = Directory.GetFiles(_inputDirectory, searchPattern);
+                    allFiles.AddRange(files);
+                }
+                
+                // Order files by creation time
+                var orderedFiles = allFiles.Distinct()
+                                          .OrderBy(f => new FileInfo(f).CreationTime)
+                                          .ToList();
+
+                if (orderedFiles.Count == 0)
+                {
+                    Console.WriteLine($"No files with supported extensions found in {_inputDirectory}");
+                    Console.WriteLine($"Supported extensions: {string.Join(", ", _supportedExtensions)}");
                 }
                 else
                 {
-                    Console.WriteLine($"Found {files.Count} .txt files to process");
+                    Console.WriteLine($"Found {orderedFiles.Count} files to process");
+                    
+                    // Group files by extension for detailed reporting
+                    var filesByExtension = orderedFiles
+                        .GroupBy(f => Path.GetExtension(f).ToLowerInvariant())
+                        .ToDictionary(g => g.Key, g => g.Count());
+                    
+                    foreach (var group in filesByExtension)
+                    {
+                        Console.WriteLine($"  - {group.Value} {group.Key} file(s)");
+                    }
                 }
 
-                return files;
+                return orderedFiles;
             }
             catch (Exception ex)
             {
