@@ -51,7 +51,8 @@ namespace File2CSVTransformer
                 // Initialize file scanner
                 Console.ForegroundColor = ConsoleColor.White;
                 consoleLogger.LogInfo($"Scanning for files in: {appSettings.InputDirectory}");
-                var fileScanner = new FileScanner(appSettings.InputDirectory, logger);
+                consoleLogger.LogInfo($"Supported file extensions: {string.Join(", ", appSettings.SupportedFileExtensions)}");
+                var fileScanner = new FileScanner(appSettings.InputDirectory, logger, appSettings.SupportedFileExtensions);
                 Console.ResetColor();
                 
                 // Scan for files to process
@@ -60,14 +61,14 @@ namespace File2CSVTransformer
                 if (filesToProcess.Count == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    consoleLogger.LogWarning("No files found to process. Please add .txt files to the Input directory.");
+                    consoleLogger.LogWarning($"No files found to process. Please add files with supported extensions ({string.Join(", ", appSettings.SupportedFileExtensions)}) to the Input directory.");
                     Console.ResetColor();
                     await consoleLogger.SaveLogAsync();
                     return;
                 }
                 
                 Console.ForegroundColor = ConsoleColor.Green;
-                consoleLogger.Log($"\n📁 Found {filesToProcess.Count} .txt files to process\n");
+                consoleLogger.Log($"\n📁 Found {filesToProcess.Count} files to process\n");
                 Console.ResetColor();
                 
                 // Initialize file processor

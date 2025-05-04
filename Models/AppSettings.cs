@@ -12,6 +12,7 @@ namespace File2CSVTransformer.Models
         public string LogDirectory { get; set; } = string.Empty;
         public string FooterMarker { get; set; } = string.Empty;
         public int AutoExitTimeoutSeconds { get; set; } = 10; // Default to 10 seconds if not specified
+        public List<string> SupportedFileExtensions { get; set; } = new List<string> { ".txt" }; // Default to .txt only
     }
 
     public class LinesToSkipSettings
