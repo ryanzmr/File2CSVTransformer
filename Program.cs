@@ -38,7 +38,7 @@ namespace File2CSVTransformer
                 // Initialize logger
                 Console.ForegroundColor = ConsoleColor.White;
                 consoleLogger.LogInfo("Initializing loggers...");
-                var logger = new Logger(appSettings.LogDirectory);
+                var logger = new Logger(appSettings.Logs.BaseDirectory);
                 Console.ResetColor();
                 
                 // Ensure output directory exists
@@ -166,7 +166,7 @@ namespace File2CSVTransformer
                 
                 consoleLogger.LogInfo("OUTPUT LOCATIONS:");
                 consoleLogger.Log($"  📄 CSV files: {Path.GetFullPath(appSettings.OutputDirectory)}");
-                consoleLogger.Log($"  📝 Process logs: {Path.GetFullPath(appSettings.LogDirectory)}");
+                consoleLogger.Log($"  📝 Process logs: {Path.GetFullPath(appSettings.Logs.BaseDirectory)}");
                 consoleLogger.Log($"  🔍 Console logs: {Path.GetFullPath("./ConsoleLog")}");
                 Console.ResetColor();
                 
