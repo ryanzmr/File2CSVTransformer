@@ -50,17 +50,26 @@ namespace File2CSVTransformer.Services
             if (settings.HeaderColumns == null || settings.HeaderColumns.Count == 0)
                 throw new InvalidOperationException("HeaderColumns are required in the configuration.");
 
-            if (string.IsNullOrWhiteSpace(settings.LogDirectory))
-                throw new InvalidOperationException("LogDirectory is required in the configuration.");
+            if (settings.Logs == null || string.IsNullOrWhiteSpace(settings.Logs.BaseDirectory))
+                throw new InvalidOperationException("Logs.BaseDirectory is required in the configuration.");
             
             // FooterMarker is optional, so no validation needed
 
             // Create directories if they don't exist
             Directory.CreateDirectory(settings.InputDirectory);
             Directory.CreateDirectory(settings.OutputDirectory);
-            Directory.CreateDirectory(settings.LogDirectory);
-            Directory.CreateDirectory(Path.Combine(settings.LogDirectory, "Success"));
-            Directory.CreateDirectory(Path.Combine(settings.LogDirectory, "Errors"));
+            
+            // Create log directories
+            string baseLogDir = settings.Logs.BaseDirectory;
+            Directory.CreateDirectory(baseLogDir);
+            
+            string errorLogDir = Path.Combine(baseLogDir, settings.Logs.ErrorLogDirectory);
+            string successLogDir = Path.Combine(baseLogDir, settings.Logs.SuccessLogDirectory);
+            string consoleLogDir = Path.Combine(baseLogDir, settings.Logs.ConsoleLogDirectory);
+            
+            Directory.CreateDirectory(errorLogDir);
+            Directory.CreateDirectory(successLogDir);
+            Directory.CreateDirectory(consoleLogDir);
         }
     }
 }
