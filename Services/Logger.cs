@@ -12,8 +12,21 @@ namespace File2CSVTransformer.Services
 
         public Logger(string logDirectory)
         {
-            _successLogPath = Path.Combine(logDirectory, "Success", $"success_{DateTime.Now:yyyyMMdd}.log");
-            _errorLogPath = Path.Combine(logDirectory, "Errors", $"error_{DateTime.Now:yyyyMMdd}.log");
+            // Use current timestamp for log files instead of just date
+            string currentDateTimeString = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            
+            // Ensure directories exist
+            string successLogDirectory = Path.Combine(logDirectory, "Success");
+            string errorLogDirectory = Path.Combine(logDirectory, "Errors");
+            
+            if (!Directory.Exists(successLogDirectory))
+                Directory.CreateDirectory(successLogDirectory);
+                
+            if (!Directory.Exists(errorLogDirectory))
+                Directory.CreateDirectory(errorLogDirectory);
+                
+            _successLogPath = Path.Combine(successLogDirectory, $"success_{currentDateTimeString}.log");
+            _errorLogPath = Path.Combine(errorLogDirectory, $"error_{currentDateTimeString}.log");
         }
 
         public async Task LogSuccessAsync(string fileName, int rowsProcessed, TimeSpan processingTime)

@@ -52,6 +52,8 @@ namespace File2CSVTransformer.Services
 
             if (string.IsNullOrWhiteSpace(settings.LogDirectory))
                 throw new InvalidOperationException("LogDirectory is required in the configuration.");
+            
+            // FooterMarker is optional, so no validation needed
 
             // Create directories if they don't exist
             Directory.CreateDirectory(settings.InputDirectory);
