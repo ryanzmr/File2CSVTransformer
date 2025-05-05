@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace File2CSVTransformer.Services
 {
@@ -80,6 +81,27 @@ namespace File2CSVTransformer.Services
             
             // Add to log file
             _logContent.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 🔄 {progressInfo} {fileName} - {message}");
+        }
+
+        // New method to get all log content as a list of strings
+        public List<string> GetLogContent()
+        {
+            var lines = new List<string>();
+            using (StringReader reader = new StringReader(_logContent.ToString()))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lines.Add(line);
+                }
+            }
+            return lines;
+        }
+
+        // New method to add a log line directly (for copying from temporary logger)
+        public void AddLogLine(string line)
+        {
+            _logContent.AppendLine(line);
         }
 
         public async Task SaveLogAsync()

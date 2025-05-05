@@ -15,30 +15,43 @@ namespace File2CSVTransformer
             Console.OutputEncoding = Encoding.UTF8;
             
             string sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var consoleLogger = new ConsoleLogger("./ConsoleLog", sessionId);
+            
+            // Create a temporary console logger for startup messages
+            var tempConsoleLogger = new ConsoleLogger("./TempConsoleLog", sessionId);
             
             // Apply color and style to make console output more attractive
             Console.ForegroundColor = ConsoleColor.Cyan;
-            consoleLogger.Log("\n");  // Add extra space at the top
-            consoleLogger.Log("🚀 FILE2CSV TRANSFORMER");
-            consoleLogger.Log("✨ Transforming Oracle Spool Outputs into Clean, Structured CSVs");
+            tempConsoleLogger.Log("\n");  // Add extra space at the top
+            tempConsoleLogger.Log("🚀 FILE2CSV TRANSFORMER");
+            tempConsoleLogger.Log("✨ Transforming Oracle Spool Outputs into Clean, Structured CSVs");
             Console.ResetColor();
-            consoleLogger.LogSeparator();
-            consoleLogger.Log("\n");  // Add extra space for better readability
+            tempConsoleLogger.LogSeparator();
+            tempConsoleLogger.Log("\n");  // Add extra space for better readability
 
             try
             {
                 // Load configuration
                 Console.ForegroundColor = ConsoleColor.White;
-                consoleLogger.LogInfo("Loading configuration...");
+                tempConsoleLogger.LogInfo("Loading configuration...");
                 var configManager = new ConfigManager();
                 var appSettings = await configManager.LoadConfigAsync();
                 Console.ResetColor();
                 
                 // Initialize logger
                 Console.ForegroundColor = ConsoleColor.White;
-                consoleLogger.LogInfo("Initializing loggers...");
+                tempConsoleLogger.LogInfo("Initializing loggers...");
                 var logger = new Logger(appSettings.Logs.BaseDirectory);
+                
+                // Create the real console logger with the proper path from configuration
+                string consoleLogPath = Path.Combine(appSettings.Logs.BaseDirectory, appSettings.Logs.ConsoleLogDirectory);
+                var consoleLogger = new ConsoleLogger(consoleLogPath, sessionId);
+                
+                // Copy initial messages to the real console logger
+                foreach (var line in tempConsoleLogger.GetLogContent())
+                {
+                    consoleLogger.AddLogLine(line);
+                }
+                
                 Console.ResetColor();
                 
                 // Ensure output directory exists
@@ -167,7 +180,7 @@ namespace File2CSVTransformer
                 consoleLogger.LogInfo("OUTPUT LOCATIONS:");
                 consoleLogger.Log($"  📄 CSV files: {Path.GetFullPath(appSettings.OutputDirectory)}");
                 consoleLogger.Log($"  📝 Process logs: {Path.GetFullPath(appSettings.Logs.BaseDirectory)}");
-                consoleLogger.Log($"  🔍 Console logs: {Path.GetFullPath("./ConsoleLog")}");
+                consoleLogger.Log($"  🔍 Console logs: {Path.GetFullPath(consoleLogPath)}");
                 Console.ResetColor();
                 
                 consoleLogger.Log("\n");  // Add extra space at the end
@@ -184,10 +197,35 @@ namespace File2CSVTransformer
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                consoleLogger.LogError($"Critical error: {ex.Message}");
-                consoleLogger.Log(ex.StackTrace ?? string.Empty);
+                tempConsoleLogger.LogError($"Critical error: {ex.Message}");
+                tempConsoleLogger.Log(ex.StackTrace ?? string.Empty);
                 Console.ResetColor();
-                await consoleLogger.SaveLogAsync();
+                
+                try
+                {
+                    // Try to save logs - use a directory we can reasonably expect to exist
+                    string fallbackLogDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "ConsoleLog");
+                    Directory.CreateDirectory(fallbackLogDir);
+                    var fallbackLogger = new ConsoleLogger(fallbackLogDir, sessionId);
+                    
+                    // Add error information
+                    fallbackLogger.LogError($"Critical error: {ex.Message}");
+                    fallbackLogger.Log(ex.StackTrace ?? string.Empty);
+                    
+                    // Copy messages from temp logger
+                    foreach (var line in tempConsoleLogger.GetLogContent())
+                    {
+                        fallbackLogger.AddLogLine(line);
+                    }
+                    
+                    await fallbackLogger.SaveLogAsync();
+                    
+                    Console.WriteLine($"Error logs saved to: {fallbackLogDir}");
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to save console logs due to critical error");
+                }
                 
                 // Auto-exit with timeout on error (use default 10 seconds if appSettings is not available)
                 Console.ForegroundColor = ConsoleColor.Yellow;
