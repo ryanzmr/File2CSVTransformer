@@ -430,8 +430,8 @@ namespace File2CSVTransformer.Services
                     }
                     else
                     {
-                        // Use "NULL" for empty values instead of empty strings
-                        normalizedRow[i] = "NULL";
+                        // Use empty string for empty values (which SQL Server will interpret as NULL)
+                        normalizedRow[i] = string.Empty;
                     }
                 }
                 
